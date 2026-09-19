@@ -17,12 +17,13 @@ defined( 'ABSPATH' ) || exit;
 /** Studio contact details. Empty values are hidden. Everything here is public. */
 function soa_contact_details() {
 	return (array) apply_filters( 'soa_contact_details', array(
-		'company' => 'Studio Olivers',
-		'email'   => '',
-		'phone'   => '',
-		'website' => '',
-		'hours'   => '',
-		'intro'   => 'Need a hand with your website? Get in touch and we\'ll help.',
+		'company'  => 'Studio Olivers',
+		'email'    => 'support@studio-olivers.co.uk',
+		'phone'    => '01606 241021',
+		'whatsapp' => '+44 7360 518121',
+		'website'  => 'https://studio-olivers.co.uk',
+		'hours'    => 'Mon–Fri, 8:30am–6:30pm',
+		'intro'    => 'Need a hand with your website? Get in touch and we\'ll help.',
 	) );
 }
 
@@ -54,6 +55,13 @@ function soa_render_contact_list() {
 			'<li><span class="dashicons dashicons-phone"></span><a href="tel:%s">%s</a></li>',
 			esc_attr( preg_replace( '/[^0-9+]/', '', $d['phone'] ) ),
 			esc_html( $d['phone'] )
+		);
+	}
+	if ( ! empty( $d['whatsapp'] ) ) {
+		printf(
+			'<li><span class="dashicons dashicons-whatsapp"></span><a href="https://wa.me/%s" target="_blank" rel="noopener">%s</a> (WhatsApp)</li>',
+			esc_attr( preg_replace( '/[^0-9]/', '', $d['whatsapp'] ) ),
+			esc_html( $d['whatsapp'] )
 		);
 	}
 	if ( $d['website'] ) {
