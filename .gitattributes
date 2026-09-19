@@ -1,0 +1,5 @@
+# Keep these out of the zip that sites download.
+/.gitattributes  export-ignore
+/.gitignore      export-ignore
+/README.md       export-ignore
+/release.sh      export-ignore
