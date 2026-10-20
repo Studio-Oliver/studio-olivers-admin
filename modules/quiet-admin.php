@@ -15,8 +15,13 @@ defined( 'ABSPATH' ) || exit;
  */
 function soa_notice_allowlist() {
 	return (array) apply_filters( 'soa_notice_allowlist', array(
+		// Security and backup plugins: never hide a warning from these.
 		'wordfence',
 		'updraftplus',
+		'security-malware-firewall', // CleanTalk Security & Malware Scan
+		'cleantalk-spam-protect',    // CleanTalk Anti-Spam
+		'sucuri-scanner',
+		'better-wp-security',        // Solid Security (formerly iThemes)
 	) );
 }
 

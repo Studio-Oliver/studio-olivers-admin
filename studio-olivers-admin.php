@@ -46,15 +46,24 @@ add_action( 'plugins_loaded', 'soa_load_modules' );
  * site's wp-config.php:
  *     define( 'SOA_GITHUB_TOKEN', 'github_pat_...' );
  */
-require_once SOA_DIR . 'lib/plugin-update-checker/plugin-update-checker.php';
+function soa_update_checker() {
+	static $checker = null;
 
-$soa_update_checker = YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
-	'https://github.com/Studio-Oliver/studio-olivers-admin/',
-	__FILE__,
-	'studio-olivers-admin'
-);
-$soa_update_checker->setBranch( 'main' );
+	if ( null === $checker ) {
+		require_once SOA_DIR . 'lib/plugin-update-checker/plugin-update-checker.php';
 
-if ( defined( 'SOA_GITHUB_TOKEN' ) && SOA_GITHUB_TOKEN ) {
-	$soa_update_checker->setAuthentication( SOA_GITHUB_TOKEN );
+		$checker = YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+			'https://github.com/Studio-Oliver/studio-olivers-admin/',
+			__FILE__,
+			'studio-olivers-admin'
+		);
+		$checker->setBranch( 'main' );
+
+		if ( defined( 'SOA_GITHUB_TOKEN' ) && SOA_GITHUB_TOKEN ) {
+			$checker->setAuthentication( SOA_GITHUB_TOKEN );
+		}
+	}
+
+	return $checker;
 }
+soa_update_checker();
