@@ -38,6 +38,42 @@ function soa_load_modules() {
 add_action( 'plugins_loaded', 'soa_load_modules' );
 
 /**
+ * Is this a Studio Olivers staff account? Staff are known by email domain,
+ * not role, because some clients are given full administrator access.
+ *
+ * Add a domain on one site in its wp-config.php:
+ *     define( 'SOA_STUDIO_EMAIL_DOMAINS', array( 'example.co.uk' ) );
+ * or from code with the 'soa_studio_email_domains' filter.
+ *
+ * @param WP_User|int|null $user Defaults to the current user.
+ */
+function soa_is_studio_user( $user = null ) {
+	if ( null === $user ) {
+		$user = wp_get_current_user();
+	} elseif ( is_numeric( $user ) ) {
+		$user = get_userdata( (int) $user );
+	}
+	if ( ! $user instanceof WP_User || ! $user->exists() ) {
+		return false;
+	}
+
+	$domains = array( 'studio-olivers.co.uk', 'mrolivers.co.uk' );
+	if ( defined( 'SOA_STUDIO_EMAIL_DOMAINS' ) ) {
+		$domains = array_merge( $domains, (array) SOA_STUDIO_EMAIL_DOMAINS );
+	}
+	$domains = array_map( 'strtolower', (array) apply_filters( 'soa_studio_email_domains', $domains ) );
+
+	// Match the whole domain after the last "@", so "evilmrolivers.co.uk" doesn't count.
+	$at = strrpos( (string) $user->user_email, '@' );
+	if ( false === $at ) {
+		return false;
+	}
+	$domain = strtolower( substr( $user->user_email, $at + 1 ) );
+
+	return in_array( $domain, $domains, true );
+}
+
+/**
  * Updates from GitHub. Publishing a GitHub release with a higher version
  * number makes "Update available" appear on every site.
  *

@@ -2,8 +2,10 @@
 /**
  * Module: Quiet Admin
  *
- * Hides plugin and theme ads, upsells and nag notices in wp-admin.
- * WordPress's own notices and allowlisted plugins still show.
+ * Hides plugin and theme ads, upsells and nag notices in wp-admin, and trims
+ * the dashboard, for clients only (administrators included).
+ * Studio Olivers staff (see soa_is_studio_user()) always see everything.
+ * WordPress's own notices and allowlisted plugins still show for clients.
  * Add ?show_notices=1 to any admin URL to see everything (admins only).
  */
 
@@ -79,6 +81,9 @@ function soa_keep_notice( $callback ) {
 
 /* 1. Remove notices from other plugins and themes, just before WordPress shows notices. */
 add_action( 'in_admin_header', function () {
+	if ( soa_is_studio_user() ) {
+		return;
+	}
 	if ( ! empty( $_GET['show_notices'] ) && current_user_can( 'manage_options' ) ) {
 		return;
 	}
@@ -102,6 +107,10 @@ add_action( 'in_admin_header', function () {
 
 /* 2. Dashboard: keep only these core widgets and remove the welcome panel. */
 add_action( 'wp_dashboard_setup', function () {
+	if ( soa_is_studio_user() ) {
+		return;
+	}
+
 	global $wp_meta_boxes;
 
 	remove_action( 'welcome_panel', 'wp_welcome_panel' );
