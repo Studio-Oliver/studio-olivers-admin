@@ -22,6 +22,12 @@ function soa_notice_allowlist() {
 		'cleantalk-spam-protect',    // CleanTalk Anti-Spam
 		'sucuri-scanner',
 		'better-wp-security',        // Solid Security (formerly iThemes)
+		// Mail and login plugins: their warnings mean forms or sign-in are failing.
+		'fluent-smtp',               // FluentSMTP
+		'wp-mail-smtp',              // WP Mail SMTP
+		'wp-mail-smtp-pro',          // WP Mail SMTP Pro
+		'post-smtp',                 // Post SMTP
+		'two-factor',                // Two Factor
 	) );
 }
 

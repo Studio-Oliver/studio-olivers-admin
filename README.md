@@ -24,5 +24,5 @@ This bumps the version, tags it, pushes, and creates a GitHub release. Sites che
 
 ## Modules
 
-- `quiet-admin`: hides plugin and theme nag notices and ads. Add `?show_notices=1` to any admin URL to see everything.
+- `quiet-admin`: hides plugin and theme nag notices and ads. Notices from WordPress itself and from the security, backup, mail and two-factor plugins in `soa_notice_allowlist()` still show. Add more on one site with the `soa_notice_allowlist` filter. Add `?show_notices=1` to any admin URL to see everything.
 - `support`: "Support" admin page, dashboard widget and footer link with Studio Olivers contact details. Change the details in `soa_contact_details()`, or override them on one site with the `soa_contact_details` filter.
