@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Studio Olivers Admin
  * Description:       Studio Olivers admin tweaks for client sites. Each feature lives in its own file in /modules.
- * Version:           1.1.1
+ * Version:           1.1.2
  * Author:            Studio Olivers
  * Requires at least: 6.0
  * Requires PHP:      7.4
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'SOA_VERSION', '1.1.1' );
+define( 'SOA_VERSION', '1.1.2' );
 define( 'SOA_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SOA_URL', plugin_dir_url( __FILE__ ) );
 
