@@ -76,29 +76,44 @@ add_filter( 'wp_redirect', function ( $location ) {
 	return soa_login_filter_url( $location );
 }, 100 );
 
-/** Show the site's normal 404 page and stop. */
+/**
+ * Show the site's normal 404 page and stop.
+ *
+ * Page builders (Bricks etc.) only apply their templates on a normal front-end
+ * request, and wp-admin isn't one. So the real 404 page is fetched once, kept
+ * for 6 hours, and served from that copy. The fetch identifies itself as a bot
+ * so SEO plugins don't log it as a 404.
+ */
 function soa_login_not_found() {
-	global $wp_query;
+	$html = get_transient( 'soa_login_404_html' );
 
+	if ( false === $html ) {
+		$html     = '';
+		$response = wp_remote_get( home_url( '/soa-page-not-found/' ), array(
+			'timeout'     => 5,
+			'redirection' => 0,
+			'user-agent'  => 'StudioOliversAdmin 404 bot',
+			'sslverify'   => apply_filters( 'https_local_ssl_verify', false ),
+		) );
+		if ( 404 === (int) wp_remote_retrieve_response_code( $response ) ) {
+			$html = (string) wp_remote_retrieve_body( $response );
+		}
+		set_transient( 'soa_login_404_html', $html, $html ? 6 * HOUR_IN_SECONDS : 5 * MINUTE_IN_SECONDS );
+	}
+
+	if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+		define( 'DONOTCACHEPAGE', true );
+	}
 	status_header( 404 );
 	nocache_headers();
 
-	if ( $wp_query instanceof WP_Query ) {
-		$wp_query->set_404();
+	if ( '' !== $html ) {
+		header( 'Content-Type: text/html; charset=' . get_option( 'blog_charset' ) );
+		echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the site's own 404 page.
+		exit;
 	}
 
-	$template = get_404_template();
-	if ( ! $template ) {
-		$template = get_index_template();
-	}
-	$template = apply_filters( 'template_include', $template );
-
-	if ( $template && is_readable( $template ) ) {
-		include $template;
-	} else {
-		wp_die( esc_html__( 'Page not found.', 'studio-olivers-admin' ), '', array( 'response' => 404 ) );
-	}
-	exit;
+	wp_die( esc_html__( 'Page not found.', 'studio-olivers-admin' ), '', array( 'response' => 404 ) );
 }
 
 $soa_login_path = soa_login_request_path();
@@ -109,6 +124,12 @@ if ( strtolower( $soa_login_path ) === strtolower( $soa_login_slug ) ) {
 	add_action( 'wp_loaded', function () {
 		// wp-login.php reads these as globals; declaring them here keeps them global.
 		global $pagenow, $error, $interim_login, $action, $user_login, $user, $redirect_to;
+
+		// Page caches (Breeze, WP Rocket, W3TC…) skip wp-login.php by name, not this address.
+		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+			define( 'DONOTCACHEPAGE', true );
+		}
+		nocache_headers();
 
 		$pagenow = 'wp-login.php'; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 		require_once ABSPATH . 'wp-login.php';
