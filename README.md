@@ -28,6 +28,7 @@ This bumps the version, tags it, pushes, and creates a GitHub release. Sites che
 - `support`: "Support" admin page, dashboard widget and footer link with Studio Olivers contact details. Change the details in `soa_contact_details()`, or override them on one site with the `soa_contact_details` filter.
 - `settings`: the **Settings → Studio Olivers** screen. Modules register their own sections with the WordPress Settings API against `soa_settings_page()`, and each keeps its own option so one module's settings can be reset alone.
 - `login-url`: moves the login page to `/<slug>/` and shows the site's 404 for `wp-login.php` and logged-out `wp-admin`. Set it at **Settings → Studio Olivers**. See [Login address](#login-address) below.
+- `login-limit`: locks an IP address out after repeated failed logins. Set it at **Settings → Studio Olivers**. See [Failed login limit](#failed-login-limit) below.
 - `login-style`: brands the login, lost-password, reset and two-factor screens (logo, colours, font; flat, no shadows). Off until a site sets `define( 'SOA_LOGIN_BRAND', array( … ) );`. The keys are listed at the top of `modules/login-style.php`.
 
 ## Login address
@@ -103,3 +104,52 @@ Password-protected pages (`action=postpass`), logging out, password-reset links
 that carry a valid key, `admin-ajax.php`, `admin-post.php`, `wp-cron.php`,
 WP-CLI, the REST API and XML-RPC. WooCommerce's My Account login is a normal
 front-end page and is unaffected.
+
+## Failed login limit
+
+After a number of failed logins from one address within a window, that address
+is refused for a while. Counts live in transients, so nothing permanent is
+added to the database. Defaults: 5 failures in 15 minutes, then locked out for
+15 minutes. Off until switched on at **Settings → Studio Olivers**.
+
+The check runs on `authenticate` before WordPress tests the password, so a
+locked-out attacker learns nothing about whether the credentials were right. It
+covers XML-RPC and application-password logins too, because those also go
+through `wp_login_failed`.
+
+### Allowlist
+
+One address or CIDR range per line in the settings field, IPv4 or IPv6. The
+settings screen shows the address you are currently connecting from, so the
+office range can be copied straight in. There is no default allowlist — an IP
+guessed wrong is worse than none.
+
+For an emergency, `wp-config.php` wins:
+
+```php
+define( 'SOA_LOGIN_ALLOWED_IPS', array( '203.0.113.4', '203.0.113.0/24' ) );
+```
+
+### How the address is decided
+
+`REMOTE_ADDR` is used and is never overridden by a request header. A
+forwarded-for header is attacker-controlled, so trusting it would let someone
+both dodge the limit and lock out whoever they chose. `X-Forwarded-For` is only
+consulted when `REMOTE_ADDR` is itself private or loopback, which means a proxy
+really is in front; override the header with `SOA_LOGIN_IP_HEADER` if needed.
+
+If no routable address can be established the limiter does nothing, even when
+switched on, and the settings screen says so. Without a per-visitor address
+every visitor would share one counter and a single attacker would lock out the
+whole site. On Cloudways (nginx → Apache → PHP-FPM) `REMOTE_ADDR` is the real
+client address, so this is the normal path.
+
+### Recovering from a lockout
+
+```bash
+wp option delete soa_login_limit   # switches the limiter off entirely
+wp cache flush                     # drops the counters (sites using Redis)
+```
+
+Lockouts also simply expire. Note that on sites with a persistent object cache
+the counters live in Redis, so `wp cache flush` clears every lockout at once.
